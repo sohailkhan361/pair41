@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install Semgrep
+        run: pipx install semgrep
+      - run: npm ci
+      - name: Validate (the same script agents run locally)
+        run: scripts/validate.sh
+        env:
+          PAIR41_TEST_POSTGRES_URL: postgres://postgres:postgres@localhost:5432/postgres
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: docker build -t pair41:${{ github.sha }} .
+      - name: Scan the image (fails on fixable critical vulnerabilities)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: pair41:${{ github.sha }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+  # Shared org workflow: builds and pushes 878386473932.dkr.ecr.us-east-1.amazonaws.com/pair41/pair41 tagged with the
+  # commit sha and latest, only from main once the tests and the image scan pass. Roles come from organization
+  # variables: github-actions in p41-devops, chained into p41-internals' role that holds the shared ECR (the same
+  # variables Particle41/cost-compass and Particle41/quark-p41 use; there is no AWS_IAM_ROLE_ARN_ECR org variable).
+  push-image:
+    needs: [validate, image]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write
+      contents: read
+    uses: Particle41/github-actions/.github/workflows/aws-ecr-push-image.yml@main
+    with:
+      runs-on: ubuntu-latest
+      aws-region: us-east-1
+      parent-role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN }}
+      role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN_P41_INTERNALS }}
+      role-chaining: true
+      ecr-repo-name: pair41/pair41
+      context-dir: . # empty makes the shared workflow look for /Dockerfile
+      dockerfile: ./Dockerfile
+      platforms: linux/amd64 # work-1 nodes are x86_64; the shared default also builds arm64 without QEMU

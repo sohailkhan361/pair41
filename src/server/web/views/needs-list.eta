@@ -1,0 +1,40 @@
+<% var kindIcon = { request: 'hand-pointing', approval: 'shield-check', deferred: 'question', join: 'terminal-window', resume: 'play-circle', unread: 'chat-circle-dots', question: 'chat-circle-dots', accepted: 'check-circle', declined: 'x', ended: 'sign-out', nudge: 'bell-simple', 'same-file': 'warning-circle', overdue: 'hourglass-medium' }; %>
+<% var list = it.needsItems || it.needs; var byTurn = function (t) { return list.filter(function (n) { return n.turn === t; }); }; %>
+<% if (!list.length) { %>
+<div class="needs-empty">
+  <%~ it.icon('check-circle') %>
+  <div>
+    <p class="title-4">Nothing needs you</p>
+    <p class="caption-2 muted">Pair requests, messages to approve and questions your agent hands to you show up here.</p>
+  </div>
+</div>
+<% } %>
+<% [['Your turn', byTurn('you')], ["Your agent's turn", byTurn('agent')], ['Waiting on your partner', byTurn('partner')]].forEach(function (group) { if (!group[1].length) return; %>
+<% if (!it.needsHideHeads) { %><p class="needs-head caption-3"><%= group[0] %></p><% } %>
+<ul class="needs-list">
+  <% group[1].forEach(function (n) { %>
+  <li class="need turn-<%= n.turn %>" data-key="need-<%= n.key %>" data-href="<%= n.href %>">
+    <span class="need-icon"><%~ it.icon(kindIcon[n.kind] || 'bell-simple') %></span>
+    <div class="need-body">
+      <a class="need-title" href="<%= n.href %>"><%= n.title %></a>
+      <% if (n.detail) { %><p class="need-detail"><%= n.detail %></p><% } %>
+      <% if (!it.needsHidePair) { %><p class="caption-5 muted"><%= n.feature %>, with <%= n.partner %></p><% } %>
+      <% if (n.kind === 'request') { %>
+      <div class="row">
+        <form method="post" action="/pairs/<%= n.pairId %>/respond"><input type="hidden" name="accept" value="yes"><button class="btn primary sm"><%~ it.icon('check') %>Accept</button></form>
+        <form method="post" action="/pairs/<%= n.pairId %>/respond"><input type="hidden" name="accept" value="no"><button class="btn ghost sm">Decline</button></form>
+      </div>
+      <% } else if (n.command) { %>
+      <%~ include('./cmd', { cmdText: n.command, cmdLabel: n.command, cmdSize: 'sm' }) %>
+      <% } %>
+      <% if (n.closeQuestion) { %>
+      <form method="post" action="/pairs/<%= n.pairId %>/questions/<%= n.closeQuestion %>/close" class="row"><input type="hidden" name="back" value="/pairs/<%= n.pairId %>"><button class="btn ghost sm" title="The pair has moved past it: close it without an answer"><%~ it.icon('x') %>Close question</button></form>
+      <% } %>
+      <% if (n.nudge) { %>
+      <form method="post" action="/pairs/<%= n.pairId %>/nudge" class="row"><input type="hidden" name="back" value="/pairs/<%= n.pairId %>"><button class="btn secondary sm"><%~ it.icon('bell-simple') %>Nudge <%= n.partner %></button></form>
+      <% } %>
+    </div>
+  </li>
+  <% }) %>
+</ul>
+<% }) %>

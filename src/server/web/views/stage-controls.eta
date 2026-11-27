@@ -1,0 +1,13 @@
+<button type="button" class="stage-pause" data-sim-pause aria-pressed="false" title="Pause the animation"><span class="when-running"><%~ it.icon('pause-circle') %><span class="sr-only">Pause the animation</span></span><span class="when-paused"><%~ it.icon('play-circle') %><span class="sr-only">Play the animation</span></span></button>
+<% if (it.stageShoot) { %>
+<button type="button" class="stage-pause stage-shoot" data-sim-shoot title="Send a spark between the agents"><%~ it.icon('sparkle') %><span class="sr-only">Send a spark between the agents</span></button>
+<button type="button" class="stage-pause stage-shoot stage-game" data-sim-game title="Catch the sparks: 10 seconds, click the sparks as they fly"><%~ it.icon('lightning') %><span class="sr-only">Play catch the sparks</span></button>
+<% } %>
+<% if (it.stageLegend) { %>
+<ul class="legend" aria-label="What the colours mean">
+  <li><i class="k-you"></i>Your agent</li>
+  <li><i class="k-them"></i>Partner's agent</li>
+  <li><i class="k-ruby"></i>Question</li>
+  <li><i class="k-net"></i>Board change</li>
+</ul>
+<% } %>

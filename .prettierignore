@@ -1,0 +1,11 @@
+node_modules/
+coverage/
+data/
+package-lock.json
+docs/PLAN.md
+docs/QUESTIONS.md
+docs/BUILD_REPORT.md
+docs/hackathon/
+*.eta
+agent-kit/plugin/pair41/lib/
+deploy/helm/

@@ -1,0 +1,188 @@
+<% layout('./layout', { title: it.title, section: 'analytics' }) %>
+<% var d = it.data; var f = it.fmt; var base = it.data.project ? '/analytics/projects/' + encodeURIComponent(it.data.project) : '/analytics'; %>
+<div class="page-head split">
+  <div>
+    <% if (d.project) { %><nav class="crumbs caption-4" aria-label="Breadcrumb"><a href="/analytics"><%~ it.icon('arrow-left') %>Analytics</a><span aria-hidden="true">/</span>project</nav><% } %>
+    <h1 class="heading-4"><%= d.project ? d.project : 'Analytics' %></h1>
+  </div>
+  <form method="get" action="<%= base %>" class="inline">
+    <label class="field inline-field">Window
+      <select name="window" onchange="this.form.submit()">
+        <option value="7d" <%= d.window === '7d' ? 'selected' : '' %>>Last 7 days</option>
+        <option value="all" <%= d.window === 'all' ? 'selected' : '' %>>All time</option>
+      </select>
+    </label>
+    <noscript><button class="btn secondary sm">Show</button></noscript>
+  </form>
+</div>
+<p class="body-6 muted page-note">Counts and times only. Pair content (messages, board, prompts, replies) stays in the pair room. End-of-pair notes appear here; their authors were told so. Time saved is an estimate from your own answer times; see docs/specs/metrics.md for how each number is worked out.</p>
+
+<% var ts = d.impact.time_saved; %>
+<h2 class="heading-6 tiles-head">Impact</h2>
+<div class="grid tiles four">
+  <div class="tile">
+    <div class="label">Time saved <span class="muted">(estimate)</span></div>
+    <div class="value"><%= ts.seconds === null ? '–' : f.duration(ts.seconds) %></div>
+    <div class="detail">
+      <% if (ts.seconds === null) { %>Not enough data yet: <%= ts.person_sample %> of <%= ts.needed %> answered questions that needed a person, to compare against.<% } else { %><%= f.duration(ts.per_question_seconds) %> per question × <%= d.impact.interruptions_avoided %> answered by agents alone. Agents alone: median <%= f.duration(ts.agent_median_seconds) %>; with a person: median <%= f.duration(ts.person_median_seconds) %> (<%= ts.person_sample %> questions).<% } %>
+    </div>
+  </div>
+  <div class="tile">
+    <div class="label">Interruptions avoided</div>
+    <div class="value"><%= d.impact.interruptions_avoided %></div>
+    <div class="detail">questions agents settled between themselves: no deferral, no approval step, nobody pulled out of their work</div>
+  </div>
+  <div class="tile">
+    <div class="label">Edit clashes caught</div>
+    <div class="value"><%= d.impact.edit_clashes %></div>
+    <div class="detail">times both people edited the same file and were warned before one overwrote the other</div>
+  </div>
+  <div class="tile">
+    <div class="label">Helpful pairs</div>
+    <div class="value"><%= f.pct(d.helpful.rate) %></div>
+    <div class="detail"><%= d.helpful.helpful %> of <%= d.helpful.rated %> rated pairs were rated helpful · <%= d.helpful.ended - d.helpful.rated %> ended pairs not rated</div>
+  </div>
+</div>
+
+<h2 class="heading-6 tiles-head">Questions</h2>
+<div class="grid tiles">
+  <div class="tile">
+    <div class="label">Questions answered</div>
+    <div class="value"><%= f.pct(d.questions.answered_rate) %></div>
+    <div class="detail"><%= d.questions.answered %> of <%= d.questions.asked %> asked · <%= f.pct(d.questions.responded_rate) %> got a response (answer, deferral or ETA)</div>
+  </div>
+  <div class="tile">
+    <div class="label">Median time to answer</div>
+    <div class="value"><%= f.duration(d.time_to_answer.median_seconds) %></div>
+    <div class="detail">
+      <% Object.keys(d.time_to_answer.by_agent).forEach(function (agent, i) { %><%= i ? ' · ' : '' %><%= agent %> <%= f.duration(d.time_to_answer.by_agent[agent]) %><% }) %>
+      <% if (d.time_to_answer.pushed !== undefined) { %><br><% if (d.time_to_answer.bridge_speedup) { %><strong><%= d.time_to_answer.bridge_speedup %>× faster</strong> when pushed by the bridge: <% } %><%= f.duration(d.time_to_answer.pushed) %> pushed · <%= f.duration(d.time_to_answer.not_pushed) %> not pushed<% } %>
+    </div>
+  </div>
+  <div class="tile <%= d.questions.open ? 'alert' : '' %>">
+    <div class="label">Open and deferred questions</div>
+    <div class="value"><%= d.questions.open + d.questions.deferred %></div>
+    <div class="detail"><%= d.questions.open %> open · <%= d.questions.deferred %> deferred<% if (d.questions.oldest_open_seconds !== null) { %> · oldest open <%= f.duration(d.questions.oldest_open_seconds) %><% } %></div>
+  </div>
+</div>
+
+<h2 class="heading-6 tiles-head">Context and adoption</h2>
+<div class="grid tiles">
+  <div class="tile secondary">
+    <div class="label">Interfaces agreed</div>
+    <div class="value"><%= d.shared_context.contracts + d.shared_context.decisions %></div>
+    <div class="detail">contracts <%= d.shared_context.contracts %> · decisions <%= d.shared_context.decisions %> · <%= d.shared_context.changes %> changes caught while pairing</div>
+  </div>
+  <div class="tile secondary">
+    <div class="label">Caught at end of turn</div>
+    <div class="value"><%= d.stop_hook.raised %></div>
+    <div class="detail">questions an agent was about to leave behind, raised by the Stop hook · <%= d.stop_hook.answered %> then answered</div>
+  </div>
+  <div class="tile secondary">
+    <div class="label">Agent messages approved</div>
+    <div class="value"><%= f.pct(d.approvals.rate) %></div>
+    <div class="detail"><%= d.approvals.approved %> approved · <%= d.approvals.rejected %> rejected<% if (d.approvals.pending) { %> · <%= d.approvals.pending %> waiting<% } %> (approve before send)</div>
+  </div>
+  <div class="tile secondary">
+    <div class="label">Work during pairs</div>
+    <div class="value"><%= d.work.commits %></div>
+    <div class="detail">commits · <%= d.work.files %> files changed</div>
+  </div>
+  <div class="tile secondary">
+    <div class="label">People pairing</div>
+    <div class="value"><%= d.adoption.people %></div>
+    <div class="detail"><%= d.adoption.repeat %> paired more than once (<%= f.pct(d.adoption.repeat_rate) %>)</div>
+  </div>
+  <div class="tile secondary">
+    <div class="label">Messages</div>
+    <div class="value"><%= d.messages.total %></div>
+    <div class="detail"><% Object.keys(d.messages.by_kind).forEach(function (k, i) { %><%= i ? ' · ' : '' %><%= d.messages.by_kind[k] %> <%= k %><% }) %></div>
+  </div>
+</div>
+
+<section class="card">
+  <h2 class="heading-6">Messages per day, by agent</h2>
+  <% if (!it.chart.days.length) { %>
+  <p class="muted">No messages in this window yet.</p>
+  <% } else { %>
+  <div class="legend"><% it.chart.series.forEach(function (s) { %><span><i style="background: <%= s.color %>"></i><%= s.label %></span><% }) %></div>
+  <div class="bars" role="img" aria-label="Messages per day, by agent. The table below has the numbers.">
+    <% it.chart.days.forEach(function (day) { %>
+    <div class="bar" title="<%= day.day %>: <%= day.total %> messages">
+      <% it.chart.series.forEach(function (s) { var n = day.counts[s.key]; if (!n) return; %>
+      <span style="height: <%= (n / it.chart.max * 140).toFixed(1) %>px; background: <%= s.color %>" title="<%= day.day %> · <%= s.label %>: <%= n %>"></span>
+      <% }) %>
+    </div>
+    <% }) %>
+  </div>
+  <div class="bars-labels"><% it.chart.days.forEach(function (day) { %><div class="bar-label"><%= day.day.slice(5) %></div><% }) %></div>
+  <details>
+    <summary>Table view</summary>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Day</th><% it.chart.series.forEach(function (s) { %><th><%= s.label %></th><% }) %><th>Total</th></tr></thead>
+      <tbody><% it.chart.days.forEach(function (day) { %><tr><td><%= day.day %></td><% it.chart.series.forEach(function (s) { %><td><%= day.counts[s.key] %></td><% }) %><td><%= day.total %></td></tr><% }) %></tbody>
+    </table></div>
+  </details>
+  <% } %>
+</section>
+
+<section class="card">
+  <h2 class="heading-6">By agent</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Agent</th><th>Messages sent</th><th>Questions asked</th><th>Answered</th><th>Deferred</th><th>Median time to answer</th></tr></thead>
+    <tbody>
+    <% d.agents.forEach(function (a) { %>
+      <tr><td><%= a.agent %></td><td><%= a.messages_sent %></td><td><%= a.questions_asked %></td><td><%= a.answered %></td><td><%= a.deferred %></td><td><%= f.duration(a.median_seconds) %></td></tr>
+    <% }) %>
+    <% if (!d.agents.length) { %><tr><td colspan="6" class="muted">No agent messages in this window.</td></tr><% } %>
+    </tbody>
+  </table></div>
+</section>
+
+<% if (it.projects) { %>
+<section class="card">
+  <h2 class="heading-6">Projects</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Project</th><th>Pairs</th><th>Messages</th><th>Questions answered</th><th>Interruptions avoided</th><th>Median time to answer</th><th>Helpful</th></tr></thead>
+    <tbody>
+    <% it.projects.forEach(function (p) { %>
+      <tr><td><a href="/analytics/projects/<%= encodeURIComponent(p.name) %>?window=<%= d.window %>"><code><%= p.name %></code></a></td><td><%= p.pairs %></td><td><%= p.messages %></td><td><%= f.pct(p.answered_rate) %></td><td><%= p.interruptions_avoided %></td><td><%= f.duration(p.median_seconds) %></td><td><%= f.pct(p.helpful_rate) %></td></tr>
+    <% }) %>
+    <% if (!it.projects.length) { %><tr><td colspan="7" class="muted">No pairs in this window.</td></tr><% } %>
+    </tbody>
+  </table></div>
+</section>
+<% } else { %>
+<section class="card">
+  <h2 class="heading-6">Pairs</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>People</th><th>Agents</th><th>Feature</th><th>Duration</th><th>Messages</th><th>Questions answered</th><th>Time to answer</th><th>Contracts · decisions</th><th>Clashes caught</th><th>Rating and note</th></tr></thead>
+    <tbody>
+    <% d.pairs.forEach(function (p) { %>
+      <tr>
+        <td><%= p.people.join(' + ') %></td>
+        <td><%= p.agents.join(' + ') %></td>
+        <td><%= p.feature %></td>
+        <td><%= p.minutes === null ? '–' : p.minutes + ' min' %></td>
+        <td><%= p.messages %></td>
+        <td><%= p.answered %> of <%= p.questions %></td>
+        <td><%= f.duration(p.median_seconds) %></td>
+        <td><%= p.contracts %> · <%= p.decisions %></td>
+        <td><%= p.edit_clashes %></td>
+        <td><% p.ratings.forEach(function (r) { %><div><%= r.person %> <%= r.helpful ? 'helpful' : 'not helpful' %><%= r.note ? ': ' + r.note : '' %></div><% }) %><% if (!p.ratings.length) { %><span class="muted"><%= p.status === 'ended' ? 'not rated' : p.status %></span><% } %></td>
+      </tr>
+    <% }) %>
+    <% if (!d.pairs.length) { %><tr><td colspan="10" class="muted">No pairs in this window.</td></tr><% } %>
+    </tbody>
+  </table></div>
+</section>
+<% } %>
+
+<% if (d.helpful.notes.length) { %>
+<section class="card">
+  <h2 class="heading-6">What people said</h2>
+  <ul class="feed">
+    <% d.helpful.notes.forEach(function (n) { %><li><strong><%= n.person %></strong> (<%= n.helpful ? 'helpful' : 'not helpful' %>): <%= n.note %></li><% }) %>
+  </ul>
+</section>
+<% } %>

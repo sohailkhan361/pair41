@@ -1,0 +1,30 @@
+# Migrations run as their own process before each install or upgrade, never at app start (checklist §7).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pair41-migrate
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: '0'
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 6 # the ExternalSecret may need a few seconds to sync on the first install
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: migrate
+          image: '{{ .Values.image.repository }}:{{ .Values.image.tag }}'
+          command: ['node', 'src/cli/main.ts', 'migrate']
+          envFrom:
+            - secretRef:
+                name: pair41-migrate
+          env:
+            - name: PAIR41_DATABASE_SSL
+              value: '{{ .Values.databaseSsl }}'
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true

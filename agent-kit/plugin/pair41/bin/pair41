@@ -1,0 +1,34 @@
+#!/bin/sh
+# The plugin's copy of the pair41 command (hooks, waiter, doctor, bridge). Built by scripts/build-plugin.sh.
+DIR="$(cd "$(dirname "$0")/.." && pwd -P)"
+# Tells pair41 doctor that it is the plugin's copy.
+export PAIR41_PLUGIN="$DIR"
+
+# The settings asked for when the plugin is enabled. They win over the environment and .pair41.json, so the hooks
+# are the same person on the same server as the plugin's MCP server.
+if [ -n "${CLAUDE_PLUGIN_OPTION_SERVER:-}" ]; then export PAIR41_SERVER="$CLAUDE_PLUGIN_OPTION_SERVER"; fi
+if [ -n "${CLAUDE_PLUGIN_OPTION_TOKEN:-}" ]; then export PAIR41_TOKEN="$CLAUDE_PLUGIN_OPTION_TOKEN"; fi
+
+# Node 22.18 or newer runs the TypeScript as it is. Without it, hooks, the waiter and the bridge do nothing rather
+# than fail every turn, and session-start tells the person why.
+version="$(node --version 2>/dev/null || true)"
+major="${version#v}"
+major="${major%%.*}"
+minor="${version#v*.}"
+minor="${minor%%.*}"
+case "$major$minor" in '' | *[!0-9]*) major=0 minor=0 ;; esac
+if [ "$major" -lt 22 ] || { [ "$major" -eq 22 ] && [ "$minor" -lt 18 ]; }; then
+  reason="Pair41 needs Node 22.18 or newer on PATH (found ${version:-none}), so it is off in this session."
+  case "${1:-}" in
+    hook | wait | bridge)
+      if [ "${1:-} ${2:-}" = "hook session-start" ]; then printf '{"systemMessage":"%s"}\n' "$reason"; fi
+      exit 0
+      ;;
+    *)
+      echo "$reason" >&2
+      exit 1
+      ;;
+  esac
+fi
+
+exec node --disable-warning=ExperimentalWarning "$DIR/lib/cli/main.ts" "$@"

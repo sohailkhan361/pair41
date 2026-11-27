@@ -1,0 +1,28 @@
+# Values for work-1. Nothing secret goes here: secrets come from Parameter Store.
+namespace: team-5 # our team's namespace on work-1
+image:
+  # The shared ECR in p41-internals. CI (ci.yml, push-image) pushes <commit sha> and latest on every merge to main.
+  repository: 878386473932.dkr.ecr.us-east-1.amazonaws.com/pair41/pair41
+  tag: latest # deploy a commit: --set image.tag=<commit sha>
+host: pair41.dev.apps.particle41.ninja
+replicas: 1 # the live feed and bridge registry are in memory: keep one replica for the hackathon
+serviceAccountName: app # team-5's Pod Identity association is for this name: do not rename
+parameters:
+  # Parameter Store names under /hackathon/<namespace>/pair41/ (team-5's aws-parameter-store store reads /hackathon/team-5/*).
+  # infra/terraform writes all three (secrets.tf).
+  databaseUrl: database-url # postgres://pair41_app:...@<rds>:5432/pair41?schema=pair41 (app user)
+  migrationDatabaseUrl: migration-database-url # the same as pair41_migrate (migration user)
+  inviteCode: invite-code # sign-up needs this code on work-1; random at first, change it by hand
+# PAIR41_DATABASE_SSL for the app and the migrate Job: TLS to RDS that checks its certificate against the RDS
+# certificate authorities the image ships. RDS refuses connections without TLS, so keep it true on work-1.
+databaseSsl: true
+otel:
+  endpoint: '' # e.g. http://otel-collector.observability:4318; empty turns tracing off
+logLevel: info
+targetGroupBinding:
+  # The shared ALB's target group for this app: infra/terraform's target_group_arn output (README, Deploying to work-1).
+  # Empty renders no TargetGroupBinding, so the chart installs before the target group exists.
+  arn: ''
+resources:
+  requests: { cpu: 100m, memory: 192Mi }
+  limits: { memory: 384Mi }

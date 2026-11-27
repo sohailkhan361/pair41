@@ -1,0 +1,16 @@
+<% var mine = it.needs.filter(function (n) { return n.turn === 'you'; }); var agents = it.needs.length - mine.length; %>
+<div id="needs" class="needs" hx-get="/needs" hx-trigger="every 10s [!document.querySelector('[data-needs-toggle][aria-expanded=true]')]" hx-swap="outerHTML">
+  <button type="button" class="needs-btn <%= mine.length ? 'tone-action' : agents ? 'tone-wait' : 'tone-clear' %>" data-needs-toggle aria-expanded="false" aria-controls="needs-panel">
+    <%~ it.icon(mine.length ? 'bell-simple' : 'check-circle') %>
+    <span class="needs-text"><%= mine.length ? 'Needs you' : 'All clear' %></span>
+    <% if (mine.length) { %><span class="count" aria-hidden="true"><%= mine.length %></span><% } %>
+    <span class="sr-only"><%= mine.length ? mine.length + (mine.length === 1 ? ' thing needs' : ' things need') + ' you' : 'Nothing needs you' %><%= agents ? ', ' + agents + ' for your agent' : '' %></span>
+  </button>
+  <div id="needs-panel" class="needs-panel" role="region" aria-label="What needs you" hidden>
+    <%~ include('./needs-list', { needsCompact: true }) %>
+    <div class="needs-notify" data-notify-row hidden>
+      <span class="caption-2 muted" data-notify-state>Browser notifications are off</span>
+      <button type="button" class="btn ghost sm" data-notify-toggle>Turn on</button>
+    </div>
+  </div>
+</div>

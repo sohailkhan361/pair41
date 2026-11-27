@@ -1,0 +1,71 @@
+# Pair41's place on the shared ALB (infra/terraform): planned on every pull request that touches it, applied to dev
+# (p41-internals-dev, the only environment) on a merge to main. Copied from Particle41/cost-compass's infra workflow;
+# the shared Particle41 workflows run terraform with the GitHub App that may read Particle41/terraform's modules.
+#
+# Organization variables AWS_IAM_ROLE_ARN (the github-actions role in p41-devops; the backend and the provider assume
+# the account roles from it) and TERRAFORM_APP_CLIENT_ID, and organization secret TERRAFORM_APP_PRIVATE_KEY: nothing to
+# add here. The GitHub environment infra-dev (created on the first run) holds any approval rule an apply must pass.
+name: infra
+
+on:
+  pull_request:
+    paths: ['infra/terraform/**', '.github/workflows/infra.yml']
+  push:
+    branches: [main]
+    paths: ['infra/terraform/**', '.github/workflows/infra.yml']
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  security-events: write
+  actions: read
+
+jobs:
+  scan:
+    uses: Particle41/github-actions/.github/workflows/trivy-scan.yml@main
+    with:
+      runs-on: ubuntu-latest
+      scan-ref: infra/terraform
+      scanners: misconfig,secret
+      severity: HIGH,CRITICAL
+      upload-sarif: false
+      sarif-category: trivy-terraform
+
+  fmt:
+    uses: Particle41/github-actions/.github/workflows/tf-fmt-check.yml@main
+    with:
+      runs-on: ubuntu-latest
+      working-directory: infra/terraform
+
+  plan-dev:
+    needs: [scan, fmt]
+    uses: Particle41/github-actions/.github/workflows/tf-plan.yml@main
+    with:
+      runs-on: ubuntu-latest
+      environment: infra-dev
+      aws-region: us-east-1
+      role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN }}
+      working-directory: infra/terraform
+      tfbackend: dev.s3.tfbackend
+      tfplan: dev.tfplan
+      checkout-app-client-id: ${{ vars.TERRAFORM_APP_CLIENT_ID }}
+    secrets:
+      checkout-app-private-key: ${{ secrets.TERRAFORM_APP_PRIVATE_KEY }}
+
+  apply-dev:
+    needs: [plan-dev]
+    if: github.event_name != 'pull_request'
+    uses: Particle41/github-actions/.github/workflows/tf-apply.yml@main
+    with:
+      runs-on: ubuntu-latest
+      environment: infra-dev
+      aws-region: us-east-1
+      role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN }}
+      working-directory: infra/terraform
+      tfbackend: dev.s3.tfbackend
+      tfplan: ${{ needs.plan-dev.outputs.tfplan }}
+      checkout-app-client-id: ${{ vars.TERRAFORM_APP_CLIENT_ID }}
+    secrets:
+      checkout-app-private-key: ${{ secrets.TERRAFORM_APP_PRIVATE_KEY }}

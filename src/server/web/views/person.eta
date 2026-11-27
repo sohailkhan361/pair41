@@ -1,0 +1,50 @@
+<% layout('./layout', { title: it.person.name, section: 'home' }) %>
+<nav class="crumbs caption-4" aria-label="Breadcrumb"><a href="/lobby"><%~ it.icon('arrow-left') %>Home</a></nav>
+<header class="person-head">
+  <span class="avatar lg <%= it.person.online ? 'on' : '' %>" aria-hidden="true"><%= it.person.name.slice(0, 1).toUpperCase() %></span>
+  <div>
+    <h1 class="heading-4"><%= it.person.name %></h1>
+    <p class="body-6 muted"><span class="dot <%= it.person.online ? 'on' : '' %>" aria-hidden="true"></span><%= it.person.online ? (it.person.agentRunning ? 'Online, agent running' : 'Online') : it.person.seen === 'never' ? 'Not seen yet' : 'Last seen ' + it.person.seen %></p>
+  </div>
+</header>
+<figure class="stage link small">
+  <script type="application/json" id="person-sim"><%~ JSON.stringify(it.sim).replace(/</g, '\\u003c') %></script>
+  <canvas data-sim="link" data-source="person-sim" aria-hidden="true"></canvas>
+  <%~ include('./stage-controls', {}) %>
+</figure>
+<% if (it.error) { %><p class="notice error" role="alert"><%~ it.icon('warning-circle') %><%= it.error %></p><% } %>
+
+<div class="person-grid">
+  <section>
+    <% if (it.open) { %>
+    <h2 class="heading-6">Your pair now</h2>
+    <%~ include('./pair-line', { p: it.open, showWith: false }) %>
+    <% } else { %>
+    <form method="post" action="/people/<%= encodeURIComponent(it.person.name) %>/pair" class="card">
+      <h2 class="heading-6">Ask <%= it.person.name %> to pair</h2>
+      <p class="caption-2 muted" id="feature-hint">They accept on their Pair41 page. Then each of you tells your own agent the pair code.</p>
+      <label class="field">Feature <input name="feature" required maxlength="120" placeholder="Due dates on todo items" value="<%= it.feature ?? '' %>" aria-describedby="feature-hint"></label>
+      <div class="row"><button class="btn primary"><%~ it.icon('hand-pointing') %>Ask <%= it.person.name %> to pair</button></div>
+    </form>
+    <% } %>
+  </section>
+
+  <section aria-labelledby="hist-title">
+    <div class="section-head"><h2 id="hist-title" class="heading-6"><%= it.open ? 'Earlier pairs' : 'Pairs with ' + it.person.name %></h2><% if (it.history.length) { %><span class="caption-5 muted"><%= it.history.length %> <%= it.history.length === 1 ? 'pair' : 'pairs' %></span><% } %></div>
+    <% if (!it.history.length) { %>
+    <div class="empty"><%~ it.icon('clock') %><p class="title-4"><%= it.open ? 'None yet' : 'No pairs with ' + it.person.name + ' yet' %></p><p class="caption-2 muted">Every pair you two have stays here, with its conversation.</p></div>
+    <% } else { %>
+    <ol class="history">
+      <% it.history.forEach(function (p) { %>
+      <li class="<%= p.state %>">
+        <div class="title-4"><%= p.feature %></div>
+        <div class="caption-5 muted">
+          <time datetime="<%= p.date %>" data-date><%= p.date.slice(0, 10) %></time><%= p.length ? ', ' + p.length : '' %>, <%= p.messages %> message<%= p.messages === 1 ? '' : 's' %><% if (p.project) { %>, in <code><%= p.project %></code><% } %><%= p.state === 'declined' ? ', declined' : '' %>
+        </div>
+        <% if (p.state !== 'declined') { %><div class="links caption-4"><a href="/pairs/<%= p.id %>">Room</a><a href="/pairs/<%= p.id %>/log">Conversation log</a></div><% } %>
+      </li>
+      <% }) %>
+    </ol>
+    <% } %>
+  </section>
+</div>

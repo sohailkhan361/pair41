@@ -1,0 +1,19 @@
+<% var p = it.p; var label = { asked: p.iAsked ? 'Waiting for ' + p.with + ' to accept' : p.with + ' asked you', agreed: p.myAgent ? 'Waiting for ' + p.with + "'s agent" : 'Your agent has not joined', connected: 'Live', ended: 'Ended', declined: 'Declined' };
+var tone = { asked: p.iAsked ? 'wait' : 'action', agreed: p.myAgent ? 'wait' : 'action', connected: 'live', ended: 'done', declined: 'done' }[p.state]; %>
+<a class="pair-card tone-<%= tone %>" href="/pairs/<%= p.id %>" data-key="pair-<%= p.id %>-<%= p.state %>">
+  <div class="pair-card-top">
+    <span class="badge tone-<%= tone %>"><i class="pulse" aria-hidden="true"></i><%= label[p.state] %></span>
+    <% if (p.project) { %><code class="caption-4"><%= p.project %></code><% } %>
+  </div>
+  <div class="title-2 feature"><%= p.feature %></div>
+  <% var meta = []; if (it.showWith !== false) meta.push('With ' + p.with); if (p.messages) meta.push(p.messages + (p.messages === 1 ? ' message' : ' messages') + (p.length ? ' in ' + p.length : '')); %>
+  <div class="caption-5 muted"><%= meta.join(', ') %><% if (it.dated) { %><%= meta.length ? ', ' : '' %><time datetime="<%= p.date %>" data-date><%= p.date.slice(0, 10) %></time><% } %></div>
+  <% if (p.state !== 'declined') { %>
+  <div class="agents-row" aria-label="Agents">
+    <span class="agent-tag <%= p.myAgent ? 'you' : 'missing' %>"><i aria-hidden="true"></i>Your <%= p.myAgent || 'agent' %><%= p.myAgent ? '' : ' (not joined)' %></span>
+    <span class="bond <%= p.state === 'connected' ? 'on' : '' %>" aria-hidden="true"></span>
+    <span class="agent-tag <%= p.theirAgent ? 'them' : 'missing' %>"><i aria-hidden="true"></i><%= p.with %>'s <%= p.theirAgent || 'agent' %><%= p.theirAgent ? '' : ' (not joined)' %></span>
+  </div>
+  <% } %>
+  <span class="pair-card-go" aria-hidden="true"><%~ it.icon('arrow-right') %></span>
+</a>

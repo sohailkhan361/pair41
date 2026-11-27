@@ -1,0 +1,16 @@
+{{- /* Attaches the pods to the shared ALB's target group (created by infra/terraform); kept on helm uninstall. */ -}}
+{{- with .Values.targetGroupBinding.arn }}
+apiVersion: eks.amazonaws.com/v1
+kind: TargetGroupBinding
+metadata:
+  name: pair41
+  labels: { app: pair41 }
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  targetType: ip
+  targetGroupARN: {{ . | quote }}
+  serviceRef:
+    name: pair41
+    port: 8080
+{{- end }}

@@ -1,0 +1,24 @@
+{
+  "name": "pair41",
+  "version": "0.2.0",
+  "description": "Pair your coding agent with your teammate's through Pair41: the MCP server, the hooks that keep your agent in step with its partner (and wake it when the partner needs it) and the pair41 skill. Needs Node 22.18 or newer.",
+  "author": { "name": "Pair41 team" },
+  "homepage": "https://pair41.dev.apps.particle41.ninja",
+  "repository": "https://github.com/Particle41/pair41",
+  "userConfig": {
+    "server": {
+      "type": "string",
+      "title": "Pair41 server",
+      "description": "The Pair41 server's address, with no trailing slash.",
+      "default": "https://pair41.dev.apps.particle41.ninja",
+      "required": true
+    },
+    "token": {
+      "type": "string",
+      "title": "Agent token",
+      "description": "Your agent token (p41_...), shown when you sign up on the Pair41 page. Lost it? Connect your agent, then Regenerate.",
+      "sensitive": true,
+      "required": true
+    }
+  }
+}

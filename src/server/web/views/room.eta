@@ -1,0 +1,96 @@
+<% layout('./layout', { title: it.pair.feature, section: 'home' }) %>
+<nav class="crumbs caption-4" aria-label="Breadcrumb"><a href="/lobby"><%~ it.icon('arrow-left') %>Home</a><span aria-hidden="true">/</span><a href="/people/<%= encodeURIComponent(it.partner.name) %>"><%= it.partner.name %></a></nav>
+
+<header class="room-head">
+  <div>
+    <h1 class="heading-4"><%= it.pair.feature %></h1>
+    <p class="body-6 muted">With <%= it.partner.name %><% if (it.pair.project) { %>, in <code><%= it.pair.project %></code><% } %></p>
+  </div>
+  <div class="room-head-end">
+    <div class="pair-code">
+      <span class="caption-3 muted">Pair code</span>
+      <%~ include('./cmd', { cmdText: it.pair.code, cmdLabel: 'the pair code', cmdSize: 'sm' }) %>
+    </div>
+    <nav class="tabs" aria-label="Pair views"><a aria-current="page" href="/pairs/<%= it.pair.id %>">Room</a><a href="/pairs/<%= it.pair.id %>/log">Conversation log</a></nav>
+    <% if (it.pair.status === 'active' || it.pair.status === 'requested') { var endLabel = it.pair.status === 'requested' && it.pair.iAsked ? 'Withdraw request' : 'End pair'; %>
+    <details class="end-pop" data-popover>
+      <summary class="btn ghost sm"><%~ it.icon('sign-out') %><%= endLabel %></summary>
+      <form method="post" action="/pairs/<%= it.pair.id %>/end" class="end-pop-panel">
+        <% if (it.pair.status === 'active') { %>
+        <label class="caption-2" for="end-summary">Summary <span class="muted">(optional)</span></label>
+        <textarea id="end-summary" name="summary" rows="3" maxlength="4000" placeholder="What did you agree, and what is left?"></textarea>
+        <% } else { %>
+        <input type="hidden" name="summary" value="">
+        <p class="caption-2 muted"><%= it.pair.iAsked ? it.partner.name + ' will no longer see your request.' : 'This ends the request without joining.' %></p>
+        <% } %>
+        <div class="row end"><button class="btn danger sm"><%= endLabel %></button></div>
+      </form>
+    </details>
+    <% } %>
+  </div>
+</header>
+<% if (it.error) { %><p class="notice error" role="alert"><%~ it.icon('warning-circle') %><%= it.error %></p><% } %>
+
+<figure class="stage link">
+  <canvas data-sim="link" data-source="room-sim" role="img" aria-label="Your agent on the right, <%= it.partner.name %>'s on the left; each message travels between them as it arrives. The thread below has every message."></canvas>
+  <%~ include('./stage-controls', { stageLegend: true, stageShoot: true }) %>
+</figure>
+
+<%~ include('./room-status', { oob: false }) %>
+
+
+
+<div id="live">
+  <%~ include('./room-live', { partial: false }) %>
+</div>
+
+<% if (it.pair.state === 'connected') { %>
+<div class="room-grid">
+  <form method="post" action="/pairs/<%= it.pair.id %>/messages" class="card composer">
+    <h2 class="heading-6"><label for="human-text">Write to <%= it.partner.name %>'s agent</label></h2>
+    <p class="caption-2 muted" id="human-hint">It arrives marked as from you, a person.</p>
+    <textarea id="human-text" name="text" rows="3" maxlength="4000" required aria-describedby="human-hint" placeholder="Short and specific works best"></textarea>
+    <div class="row end"><button class="btn primary">Send</button></div>
+  </form>
+  <div class="stack">
+    <form method="post" action="/settings/sharing" class="card setting">
+      <input type="hidden" name="back" value="/pairs/<%= it.pair.id %>">
+      <div>
+        <p class="title-4"><%~ it.icon('eye') %> Conversation sharing <span class="badge <%= it.sharing ? 'tone-live' : '' %>"><%= it.sharing ? 'On' : 'Off' %></span></p>
+        <p class="caption-2 muted"><%= it.sharing ? 'You share your prompts and your agent\'s replies with ' + it.partner.name + ', trimmed and with secrets redacted.' : 'You do not share your conversation with ' + it.partner.name + '. Commits, files and board changes are still shared.' %></p>
+      </div>
+      <input type="hidden" name="share" value="<%= it.sharing ? 'off' : 'on' %>"><button class="btn secondary sm"><%= it.sharing ? 'Stop sharing' : 'Share it' %></button>
+    </form>
+  </div>
+</div>
+<% } else if (it.pair.status === 'ended') { %>
+<section class="card feedback" aria-labelledby="fb-title">
+  <h2 id="fb-title" class="heading-6">Did this pairing help?</h2>
+  <% if (it.feedback) { %><p class="body-6">You said <%= it.feedback.helpful ? 'yes' : 'no' %><%= it.feedback.note ? ': ' + it.feedback.note : '' %>. You can change it.</p><% } %>
+  <form method="post" action="/pairs/<%= it.pair.id %>/feedback">
+    <fieldset class="choices">
+      <legend class="sr-only">Helpful?</legend>
+      <label class="choice"><input type="radio" name="helpful" value="yes" required> Yes, it helped</label>
+      <label class="choice"><input type="radio" name="helpful" value="no"> Not really</label>
+    </fieldset>
+    <label class="field">Note <span class="muted">(optional)</span><input name="note" maxlength="500"></label>
+    <p class="caption-2 muted">Your note appears on the analytics pages, which every Pair41 user can see. Nothing else from this pair does.</p>
+    <div class="row"><button class="btn primary">Send</button><a class="btn ghost" href="/pairs/<%= it.pair.id %>/summary.md"><%~ it.icon('download-simple') %>Pair summary for your PR</a></div>
+  </form>
+</section>
+<% } %>
+
+<script>
+  // Live updates: the server says "changed", the page fetches the live part again (the status strip comes with it)
+  // and the view animates what is new.
+  (function () {
+    var source = new EventSource('/events?pair=<%= it.pair.id %>');
+    var timer;
+    source.addEventListener('changed', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        htmx.ajax('GET', '/pairs/<%= it.pair.id %>/live', { target: '#live', swap: 'innerHTML' });
+      }, 200);
+    });
+  })();
+</script>

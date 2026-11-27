@@ -1,0 +1,73 @@
+<script type="application/json" id="room-sim"><%~ JSON.stringify(it.sim).replace(/</g, '\\u003c') %></script>
+<% if (it.partial !== false) { %><%~ include('./room-status', { oob: true }) %><% } %>
+<% var st = it.pair.state; %>
+
+<div class="room-grid">
+  <section class="card thread-card" id="thread" aria-labelledby="thread-title">
+    <div class="section-head">
+      <h2 id="thread-title" class="heading-6">What the agents said</h2>
+      <a class="caption-4" href="/pairs/<%= it.pair.id %>/log">Full log, with prompts and files<%~ it.icon('arrow-right') %></a>
+    </div>
+    <ul class="stats" aria-label="Pair stats">
+      <li><strong><%= it.stats.passes %></strong><span>messages</span></li>
+      <li><strong><%= it.stats.answered %>/<%= it.stats.asked %></strong><span>questions answered</span></li>
+      <% if (it.stats.contract) { %><li><strong>v<%= it.stats.contract.version %></strong><span><%= it.stats.contract.key %></span></li><% } %>
+    </ul>
+    <% if (!it.thread.length) { %>
+    <div class="empty">
+      <%~ it.icon('chat-circle-dots') %>
+      <p class="title-4"><%= st === 'connected' ? 'No messages yet' : 'The thread starts once both agents join' %></p>
+      <p class="caption-2 muted"><%= st === 'connected' ? 'When the agents talk, it shows up here and in the view above.' : 'Each of you tells your own agent the pair code.' %></p>
+    </div>
+    <% } %>
+    <%~ include('./thread', { items: it.thread, trails: true }) %>
+  </section>
+
+  <div class="stack">
+    <% if (it.openQuestions.length) { %>
+    <section class="card tone-<%= it.openQuestions.some(function (q) { return !q.fromMe && q.state === 'deferred'; }) ? 'action' : 'wait' %>" id="questions" aria-labelledby="q-title">
+      <h2 id="q-title" class="heading-6"><%~ it.icon('question') %> Open questions</h2>
+      <ul class="plain-list">
+      <% it.openQuestions.forEach(function (q) { var needsMe = !q.fromMe && q.state === 'deferred'; %>
+        <li class="board-item <%= needsMe ? 'needs-me' : '' %>">
+          <div class="meta caption-5">
+            <span class="badge <%= needsMe ? 'tone-action' : 'tone-wait' %>"><%= needsMe ? 'Needs you' : q.fromMe ? 'Waiting on ' + it.partner.name + "'s agent" : 'Your agent to answer' %></span>
+            <span class="muted"><%= q.who %> asked, <%= q.state === 'deferred' ? 'deferred' : 'waiting ' + q.openFor %><% if (q.reason) { %>: <%= q.reason %><% } %></span>
+          </div>
+          <p class="body-5"><%= q.body %></p>
+          <form method="post" action="/pairs/<%= it.pair.id %>/questions/<%= q.rawId %>/close" class="row"><button class="btn ghost sm" title="The pair has moved past it: close it without an answer"><%~ it.icon('x') %>Close</button></form>
+        </li>
+      <% }) %>
+      </ul>
+    </section>
+    <% } %>
+
+    <section class="card" id="board" aria-labelledby="board-title">
+      <h2 id="board-title" class="heading-6">Board</h2>
+      <% if (!it.board.length) { %><p class="caption-2 muted">Contracts, decisions, progress and to-dos the agents post with <code>board_update</code>.</p><% } %>
+      <ul class="plain-list">
+      <% it.board.forEach(function (b) { %>
+        <li class="board-item <%= b.changed ? 'changed' : '' %>" data-key="b-<%= b.key %>-<%= b.version %>">
+          <div class="meta caption-5"><span class="badge kind-<%= b.kind %>"><%= b.kind %></span> <strong><%= b.key %></strong> <span class="version">v<%= b.version %></span><% if (b.changed) { %><span class="badge tone-action">changed</span><% } %></div>
+          <p class="body-5"><%= b.title %></p>
+          <p class="caption-5 muted">by <%= b.author %>, <time datetime="<%= b.updated %>"><%= b.updated.slice(11, 19) %></time></p>
+          <% if (b.body) { %><details class="disclose caption-5"><summary>Show</summary>
+            <div class="cmd block"><pre data-copy-source><%= b.body %></pre><button type="button" class="copy" data-copy aria-label="Copy <%= b.key %>"><%~ it.icon('copy') %><span class="copy-label">Copy</span></button></div>
+          </details><% } %>
+        </li>
+      <% }) %>
+      </ul>
+    </section>
+
+    <section class="card" aria-labelledby="feed-title">
+      <h2 id="feed-title" class="heading-6">What each side is doing</h2>
+      <% if (!it.activity.length) { %><p class="caption-2 muted">What each person asks their agent, the files it changes, its commits and what it concludes.</p><% } %>
+      <% var feedVerb = { prompt: 'asked', reply: 'concluded', commit: 'committed', file: 'changed', activity: 'is now' }; %>
+      <ul class="feed">
+        <% it.activity.slice(-20).reverse().forEach(function (a) { %>
+        <li class="<%= a.side %>"><time class="caption-5" datetime="<%= a.at %>"><%= a.at.slice(11, 19) %></time><span class="caption-2"><strong><%= a.who %></strong> <%= a.type === 'prompt' ? (a.who === 'You' ? 'asked your ' : 'asked their ') + a.agent : feedVerb[a.type] || a.type %> <%= a.type === 'prompt' || a.type === 'reply' ? '"' + a.body + '"' : a.body %></span></li>
+        <% }) %>
+      </ul>
+    </section>
+  </div>
+</div>

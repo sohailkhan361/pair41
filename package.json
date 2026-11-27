@@ -1,0 +1,59 @@
+{
+  "name": "pair41",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pair41 lets your coding agent pair with your teammate's coding agent, whichever agent each of you uses.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "bin": {
+    "pair41": "bin/pair41"
+  },
+  "scripts": {
+    "start": "node src/server/main.ts",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "fmt": "prettier --write .",
+    "fmt:check": "prettier --check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cookie": "11.1.5",
+    "@fastify/formbody": "9.0.2",
+    "@fastify/websocket": "11.3.7",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@opentelemetry/api": "1.10.0",
+    "@opentelemetry/instrumentation": "0.301.2",
+    "@opentelemetry/instrumentation-http": "0.301.2",
+    "@opentelemetry/instrumentation-pg": "0.78.0",
+    "@opentelemetry/instrumentation-undici": "0.35.1",
+    "@opentelemetry/sdk-node": "0.301.2",
+    "better-sqlite3": "13.2.0",
+    "eta": "4.6.0",
+    "fastify": "5.12.8",
+    "gsap": "3.15.1",
+    "htmx.org": "2.0.11",
+    "kysely": "0.29.9",
+    "lenis": "1.3.27",
+    "pg": "8.23.1",
+    "three": "0.187.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/better-sqlite3": "9.6.0",
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "@types/ws": "8.18.2",
+    "eslint": "10.15.0",
+    "prettier": "3.10.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.74.0",
+    "vitest": "5.1.1"
+  },
+  "optionalDependencies": {
+    "node-pty": "1.1.0"
+  }
+}

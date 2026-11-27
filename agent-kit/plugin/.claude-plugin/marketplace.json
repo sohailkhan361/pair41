@@ -1,0 +1,11 @@
+{
+  "name": "pair41-local",
+  "owner": { "name": "Pair41 team" },
+  "plugins": [
+    {
+      "name": "pair41",
+      "source": "./pair41",
+      "description": "Pair your coding agent with your teammate's: the Pair41 MCP server, hooks and the pair41 skill."
+    }
+  ]
+}

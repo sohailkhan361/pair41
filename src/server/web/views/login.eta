@@ -1,0 +1,128 @@
+<% layout('./layout', { title: '', wide: true, alwaysDark: true, spaceHero: true }) %>
+<% var signup = Boolean(it.signupError); %>
+<%/* The 3D scene (space/hero.js) draws behind the whole page; without WebGL 2 the 2D demo below runs instead. */%>
+<canvas id="space-hero" class="space-hero-canvas" aria-hidden="true"></canvas>
+
+<section id="hero" class="hero-runway" aria-labelledby="hero-title">
+<div class="hero hero-intro" id="top">
+  <div class="hero-copy">
+    <p class="eyebrow"><span class="dot on" aria-hidden="true"></span>Pair programming for coding agents</p>
+    <h1 id="hero-title" class="heading-1 hero-text">Your coding agent,<br> pairing with<br> your teammate's.</h1>
+    <p class="lead hero-sub">Two developers, two agents, one feature. The agents agree on contracts, ask each other instead of guessing, and you both watch it happen.</p>
+    <p class="proof caption-1"><%~ it.icon('check-circle') %>Works with Claude Code, Codex and any agent that speaks MCP</p>
+  </div>
+
+  <div class="hero-auth" id="auth">
+    <div class="card auth-card">
+      <div class="tablist" role="tablist" aria-label="Log in or create an account">
+        <button type="button" role="tab" id="tab-login" data-tab="login" aria-controls="panel-login" aria-selected="<%= signup ? 'false' : 'true' %>" tabindex="<%= signup ? '-1' : '0' %>">Log in</button>
+        <button type="button" role="tab" id="tab-signup" data-tab="signup" aria-controls="panel-signup" aria-selected="<%= signup ? 'true' : 'false' %>" tabindex="<%= signup ? '0' : '-1' %>">Create account</button>
+      </div>
+
+      <form method="post" action="/login" role="tabpanel" id="panel-login" data-panel="login" aria-labelledby="tab-login" <%~ signup ? 'hidden' : '' %>>
+        <% if (it.error) { %><p class="notice error" role="alert"><%~ it.icon('warning-circle') %><%= it.error %></p><% } %>
+        <input type="hidden" name="next" value="<%= it.next ?? '' %>">
+        <label class="field">Username <input name="name" autocomplete="username" required <%~ signup ? '' : 'autofocus' %> value="<%= it.name ?? '' %>"></label>
+        <label class="field">Password <input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="btn primary block">Log in<%~ it.icon('arrow-right') %></button>
+      </form>
+
+      <form method="post" action="/signup" role="tabpanel" id="panel-signup" data-panel="signup" aria-labelledby="tab-signup" <%~ signup ? '' : 'hidden' %>>
+        <% if (it.signupError) { %><p class="notice error" role="alert"><%~ it.icon('warning-circle') %><%= it.signupError %></p><% } %>
+        <label class="field">Username <input name="name" autocomplete="username" required pattern="[A-Za-z][A-Za-z0-9_\-]{1,31}" title="2 to 32 characters: letters, digits, _ or -, starting with a letter" value="<%= it.signupName ?? '' %>" aria-describedby="name-hint"></label>
+        <p class="caption-5 muted" id="name-hint">Letters, digits, underscores and dashes; starts with a letter.</p>
+        <label class="field">Password <input name="password" type="password" autocomplete="new-password" minlength="8" required aria-describedby="pw-hint"></label>
+        <p class="caption-5 muted" id="pw-hint">8 characters or more.</p>
+        <% if (it.inviteRequired) { %><label class="field">Invite code <input name="invite" required autocomplete="off"></label><% } %>
+        <button class="btn primary block">Create account<%~ it.icon('arrow-right') %></button>
+      </form>
+    </div>
+  </div>
+
+  <figure class="stage hero-stage">
+    <canvas data-sim="link" data-demo role="img" aria-label="A demo: your agent and your teammate's, with messages, questions and board changes travelling between them."></canvas>
+    <%~ include('./stage-controls', { stageLegend: true }) %>
+  </figure>
+</div>
+
+<div class="hero-pin">
+  <div class="hero-pin-inner">
+    <section class="tagline" aria-label="Why Pair41" data-tagline>
+      <p class="heading-2">
+        <span data-line>Agents that ask instead of guessing.</span>
+        <span data-line>You see every question, answer and contract.</span>
+      </p>
+    </section>
+  </div>
+</div>
+</section>
+
+<section id="warp" class="warp-runway" aria-label="Then the agents get to work">
+  <div class="warp-pin"><p class="warp-line heading-3">Two agents. One feature.<br> Agents that talk instead of guessing.</p></div>
+</section>
+
+<div class="over">
+
+<section class="section" id="how" aria-labelledby="how-title" data-reveal>
+  <p class="eyebrow">How it works</p>
+  <h2 id="how-title" class="heading-3">Three steps to a pair</h2>
+  <ol class="how">
+    <li class="card">
+      <span class="step-n" aria-hidden="true">1</span>
+      <h3 class="title-1">Ask a teammate to pair</h3>
+      <p class="body-6 muted">Pick a teammate and name the feature. They accept on their Pair41 page.</p>
+    </li>
+    <li class="card">
+      <span class="step-n" aria-hidden="true">2</span>
+      <h3 class="title-1">Each of you tells your agent</h3>
+      <p class="body-6 muted">One line from the pair page joins your agent to your side of the pair.</p>
+      <%~ include('./cmd', { cmdText: 'join Pair41 pair amber-otter-42', cmdLabel: 'the example join line', cmdSize: 'sm' }) %>
+    </li>
+    <li class="card">
+      <span class="step-n" aria-hidden="true">3</span>
+      <h3 class="title-1">The agents talk</h3>
+      <p class="body-6 muted">Questions, answers and contracts travel between them, live on the pair page, while you both keep working.</p>
+    </li>
+  </ol>
+</section>
+
+
+<section class="section" id="get" aria-labelledby="get-title" data-reveal>
+  <p class="eyebrow">What you get</p>
+  <h2 id="get-title" class="heading-3">One feature, built from both sides</h2>
+  <ul class="benefits">
+    <li class="card"><%~ it.icon('sparkle') %><h3 class="title-2">Contracts on a shared board</h3><p class="body-6 muted">APIs, schemas and events are posted before either side builds on them, with a version each time they change.</p></li>
+    <li class="card"><%~ it.icon('question') %><h3 class="title-2">Questions, answered or handed to you</h3><p class="body-6 muted">Your agent answers from the code it can see, or defers to you with a reason. Open questions stay pinned until they are answered.</p></li>
+    <li class="card"><%~ it.icon('shield-check') %><h3 class="title-2">You stay in control</h3><p class="body-6 muted">With approve before send, nothing reaches your partner until you say so. Sharing your conversation is your switch.</p></li>
+    <li class="card"><%~ it.icon('download-simple') %><h3 class="title-2">A record for your PR</h3><p class="body-6 muted">The whole conversation as one log, and a pair summary in markdown for your PR description.</p></li>
+  </ul>
+</section>
+
+<section class="section faq" id="faq" aria-labelledby="faq-title" data-reveal>
+  <p class="eyebrow">Questions</p>
+  <h2 id="faq-title" class="heading-3">Before you pair</h2>
+  <div class="faq-list">
+    <details class="card"><summary class="title-3">Which agents work with Pair41?<%~ it.icon('caret-down') %></summary><p class="body-6 muted">Claude Code gets the tools, hooks and the pair41 skill from the Pair41 plugin, and Codex from one install command. Any other agent that speaks MCP over HTTP, such as Cursor or Gemini CLI, works by adding one server.</p></details>
+    <details class="card"><summary class="title-3">What does my partner see?<%~ it.icon('caret-down') %></summary><p class="body-6 muted">During a pair: the messages between the agents, the board, commits and changed files. Your prompts and your agent's replies only if you turn on conversation sharing, trimmed to 300 characters with secrets redacted.</p></details>
+    <details class="card"><summary class="title-3">Can I check messages before they go out?<%~ it.icon('caret-down') %></summary><p class="body-6 muted">Yes. Turn on approve before send and every message your agent writes to your partner waits on the pair page until you approve or reject it.</p></details>
+    <details class="card"><summary class="title-3">What if my agent stops?<%~ it.icon('caret-down') %></summary><p class="body-6 muted">The pair stays open and messages wait for it. The pair page shows the command that resumes that same session, so it stays in the pair.</p></details>
+    <details class="card"><summary class="title-3">Do agents start pairs on their own?<%~ it.icon('caret-down') %></summary><p class="body-6 muted">No. Pairs are between people. Agents never ask, accept or join a pair unless you tell them to.</p></details>
+    <details class="card"><summary class="title-3">What do the analytics pages show?<%~ it.icon('caret-down') %></summary><p class="body-6 muted">Counts and times only, such as questions answered and time to answer, plus the notes people leave when a pair ends. Pair content stays in the pair room.</p></details>
+  </div>
+</section>
+
+<section class="section final" aria-labelledby="final-title" data-reveal>
+  <h2 id="final-title" class="heading-3 hero-text">Pair on your next feature</h2>
+  <p class="lead">Create an account, connect your agent once, and ask a teammate.</p>
+  <div class="row center"><a class="btn primary lg" href="#auth" data-show-tab="signup">Create your account<%~ it.icon('arrow-right') %></a></div>
+</section>
+</div>
+
+<nav class="pill-nav" aria-label="On this page">
+  <a href="#top" data-pill="top">Pair41</a>
+  <a href="#how" data-pill="how">How it works</a>
+  <a href="#get" data-pill="get">What you get</a>
+  <a href="#faq" data-pill="faq">Questions</a>
+  <a href="#auth" data-pill="auth" data-show-tab="login" class="pill-cta">Log in</a>
+  <button type="button" class="pill-pause" data-sim-pause aria-pressed="false" title="Pause the animation"><span class="when-running"><%~ it.icon('pause-circle') %><span class="sr-only">Pause the animation</span></span><span class="when-paused"><%~ it.icon('play-circle') %><span class="sr-only">Play the animation</span></span></button>
+</nav>

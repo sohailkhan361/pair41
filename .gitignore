@@ -1,0 +1,45 @@
+# Dependencies and build output
+node_modules/
+coverage/
+dist/
+*.tsbuildinfo
+.eslintcache
+
+# Local data: SQLite databases and logs
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.log
+npm-debug.log*
+.pair41/
+
+# Secrets and per-machine settings
+.env
+.env.*
+!.env.example
+
+# Editors and OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Docs: keep only our specs and screenshots. The P41 hackathon rules (docs/hackathon/) are internal
+# infrastructure notes and stay on your machine.
+docs/*
+!docs/specs/
+!docs/screenshots/
+
+# The build session's own Claude Code settings live here; never commit them.
+/.claude/
+# Per-machine agent configs written by agent-kit/connect-*.sh (here when this repo's own folder is connected)
+/.pair41.json
+/.mcp.json
+/.codex/
+/.agents/
+
+# Built by scripts/build-plugin.sh (the plugin's doctor skill is not built, so it is committed)
+agent-kit/plugin/pair41/lib/
+agent-kit/plugin/pair41/skills/pair41/

@@ -1,0 +1,83 @@
+<% layout('./layout', { title: 'Connect your agent', section: 'connect' }) %>
+<% var token = it.token ? it.token : 'p41_...'; %>
+<header class="page-head">
+  <p class="eyebrow">Setup</p>
+  <h1 class="heading-4">Connect your agent</h1>
+  <p class="lead"><%= it.welcome ? 'Welcome, ' + it.user.name + '. ' : '' %>Connect your agent once, then pair with anyone.</p>
+</header>
+
+<ol class="steps-list">
+  <li class="card step <%= it.token ? 'tone-action' : '' %>">
+    <span class="step-n" aria-hidden="true">1</span>
+    <div class="step-body">
+      <h2 class="heading-6">Your agent token</h2>
+      <% if (it.token) { %>
+        <p class="body-6"><%= it.regenerated ? 'Your new token. The old one has stopped working, so update it in Claude Code with /plugin manage.' : 'Your token.' %> <strong>It is shown only now</strong>: paste it when the Pair41 plugin asks for it, or use it in the commands below.</p>
+        <%~ include('./cmd', { cmdText: it.token, cmdLabel: 'your agent token', cmdSize: '' }) %>
+      <% } else { %>
+        <p class="body-6 muted">Your token was shown when you signed up. Pair41 keeps only a fingerprint of it, so it cannot show it again. Lost it? Get a new one; the old one stops working at once.</p>
+      <% } %>
+      <form method="post" action="/connect/regenerate"><button class="btn secondary sm">Regenerate my token</button></form>
+    </div>
+  </li>
+
+  <li class="card step">
+    <span class="step-n" aria-hidden="true">2</span>
+    <div class="step-body">
+      <h2 class="heading-6">Install once</h2>
+      <h3 class="title-3">Claude Code: the Pair41 plugin</h3>
+      <p class="body-6 muted">In Claude Code, run <code>/plugin</code> and install <strong>pair41</strong> from P41's plugin library. When you enable it, it asks for the server and your token, and keeps the token in your keychain. It brings the Pair41 tools, the hooks that keep your agent up to date and wake it when your partner needs it, and the pair41 skill. It needs Node 22.18 or newer. Something not working? Run <code>/pair41:doctor</code> in Claude Code.</p>
+      <dl class="kv">
+        <dt class="caption-3 muted">Server</dt><dd><%~ include('./cmd', { cmdText: it.server, cmdLabel: 'the server address', cmdSize: 'sm' }) %></dd>
+      </dl>
+      <h3 class="title-3">Codex</h3>
+      <p class="body-6 muted">From a clone of the Pair41 repo. It sets up Codex (Desktop too) for your user: the Pair41 tools, the hooks and the pair41 skill. Running sessions need one restart, and Codex asks you to trust the hooks once with <code>/hooks</code>.</p>
+      <%~ include('./cmd', { cmdText: 'bin/pair41 install --agents codex --server ' + it.server + ' --token ' + token, cmdLabel: 'the Codex install command', cmdSize: '' }) %>
+      <div class="side-by-side">
+        <div><p class="caption-3 muted">Remove it from Codex</p><%~ include('./cmd', { cmdText: 'bin/pair41 uninstall', cmdLabel: 'the uninstall command', cmdSize: 'sm' }) %></div>
+        <div><p class="caption-3 muted">Turn it off for one session</p><%~ include('./cmd', { cmdText: 'PAIR41_OFF=1', cmdLabel: 'PAIR41_OFF=1', cmdSize: 'sm' }) %></div>
+      </div>
+    </div>
+  </li>
+
+  <li class="card step">
+    <span class="step-n" aria-hidden="true">3</span>
+    <div class="step-body">
+      <h2 class="heading-6">Pair</h2>
+      <p class="body-6 muted">On <a href="/lobby">Home</a>, pick a teammate and ask them to pair on a feature. Once they accept, each of you tells your own agent the line from the pair page, for example:</p>
+      <%~ include('./cmd', { cmdText: 'join Pair41 pair amber-otter-42', cmdLabel: 'the example join line', cmdSize: 'sm' }) %>
+    </div>
+  </li>
+</ol>
+
+<section class="card" aria-labelledby="mcp-title">
+  <h2 id="mcp-title" class="heading-6"><%~ it.icon('terminal-window') %> Or any other agent that speaks MCP</h2>
+  <p class="body-6 muted">Cursor, Gemini CLI, or anything else with MCP over HTTP: add one server.</p>
+  <dl class="kv">
+    <dt class="caption-3 muted">URL</dt><dd><%~ include('./cmd', { cmdText: it.server + '/mcp', cmdLabel: 'the MCP URL', cmdSize: 'sm' }) %></dd>
+    <dt class="caption-3 muted">Header</dt><dd><%~ include('./cmd', { cmdText: 'Authorization: Bearer ' + token, cmdLabel: 'the authorization header', cmdSize: 'sm' }) %></dd>
+  </dl>
+  <p class="caption-2 muted">Without hooks your agent sees partner messages whenever it calls a Pair41 tool, so ask it to "check pair" now and then.</p>
+</section>
+
+<div class="grid-2">
+  <form method="post" action="/settings/sharing" class="card setting">
+    <input type="hidden" name="back" value="/connect">
+    <div>
+      <p class="title-3"><%~ it.icon('eye') %> Sharing your conversation <span class="badge <%= it.user.share_conversation === 1 ? 'tone-live' : '' %>"><%= it.user.share_conversation === 1 ? 'On' : 'Off' %></span></p>
+      <p class="caption-2 muted">While you are in a pair, and only with that partner, Pair41 shares what you ask your agent and your agent's last reply of each turn, trimmed to 300 characters with secrets redacted. Commits, files and board changes are always shared during a pair. Analytics never show any of it.</p>
+    </div>
+    <input type="hidden" name="share" value="<%= it.user.share_conversation === 1 ? 'off' : 'on' %>">
+    <button class="btn secondary sm"><%= it.user.share_conversation === 1 ? 'Turn it off' : 'Turn it on' %></button>
+  </form>
+
+  <form method="post" action="/settings/approval" class="card setting">
+    <input type="hidden" name="back" value="/connect">
+    <div>
+      <p class="title-3"><%~ it.icon('shield-check') %> Approve before send <span class="badge <%= it.user.approve_before_send === 1 ? 'tone-action' : '' %>"><%= it.user.approve_before_send === 1 ? 'On' : 'Off' %></span></p>
+      <p class="caption-2 muted">When this is on, every message your agent sends to a partner waits on the pair room page until you approve it. Your partner sees nothing until then. Use it before pairing on client code.</p>
+    </div>
+    <input type="hidden" name="approve" value="<%= it.user.approve_before_send === 1 ? 'off' : 'on' %>">
+    <button class="btn secondary sm"><%= it.user.approve_before_send === 1 ? 'Turn it off' : 'Turn it on' %></button>
+  </form>
+</div>

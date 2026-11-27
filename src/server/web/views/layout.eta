@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= it.title ? it.title + ' | Pair41' : 'Pair41: your coding agent, pairing with your teammate\'s' %></title>
+  <meta name="description" content="Pair41 connects your coding agent with your teammate's while you both build one feature. The agents agree on contracts and ask each other instead of guessing, and you watch it happen.">
+  <meta property="og:title" content="Pair41">
+  <meta property="og:description" content="Your coding agent, pairing with your teammate's.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/static/p41-icon.svg">
+  <meta name="twitter:card" content="summary">
+  <meta name="theme-color" content="#050c18" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
+  <script>
+    // Dark first; a light theme is one click away and remembered in this browser. The landing page is always dark.
+    document.documentElement.classList.add('js');
+    <% if (!it.alwaysDark) { %>try { var pair41Theme = localStorage.getItem('pair41-theme'); if (pair41Theme) document.documentElement.setAttribute('data-theme', pair41Theme); } catch (e) {}<% } %>
+    // WebGL 2: the 3D layer (space/boot.js) draws the live views; sim.js waits for it before drawing in 2D.
+    try { if (document.createElement('canvas').getContext('webgl2')) document.documentElement.classList.add('webgl'); } catch (e) {}
+  </script>
+  <script type="importmap"><%~ it.importMap %></script>
+  <link rel="icon" href="/static/p41-icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=<%= it.styleVersion %>">
+  <script src="/static/htmx.min.js" defer></script>
+  <script src="/static/site.js?v=<%= it.styleVersion %>" defer></script>
+  <script src="/static/sim.js?v=<%= it.styleVersion %>" defer></script>
+  <% if (it.spaceHero) { %>
+  <link rel="stylesheet" href="/static/<%= it.vendor.lenis %>/lenis.css">
+  <script src="/static/<%= it.vendor.gsap %>/gsap.min.js" defer></script>
+  <script src="/static/<%= it.vendor.gsap %>/ScrollTrigger.min.js" defer></script>
+  <script src="/static/<%= it.vendor.lenis %>/lenis.min.js" defer></script>
+  <% } %>
+  <script type="module" src="/static/<%= it.spaceBase %>/boot.js"></script>
+</head>
+<body class="<%= it.user ? 'in' : 'out' %>">
+  <a class="skip" href="#main">Skip to content</a>
+  <div id="announce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <header class="nav-wrap">
+    <nav class="nav" aria-label="Main">
+      <a class="brand" href="<%= it.user ? '/lobby' : '/login' %>" aria-label="Pair41, home">
+        <img src="/static/p41-icon.svg" alt="" width="20" height="20"><span>Pair41</span>
+      </a>
+      <% if (it.user) { %>
+      <div class="nav-links">
+        <a href="/lobby" <%~ it.section === 'home' ? 'aria-current="page"' : '' %>><%~ it.icon('house') %>Home</a>
+        <a href="/analytics" <%~ it.section === 'analytics' ? 'aria-current="page"' : '' %>><%~ it.icon('chart-bar') %>Analytics</a>
+        <a href="/connect" <%~ it.section === 'connect' ? 'aria-current="page"' : '' %>><%~ it.icon('plug') %>Connect your agent</a>
+      </div>
+      <% } %>
+      <div class="nav-end">
+        <% if (it.user) { %><%~ include('./needs', {}) %><% } %>
+        <% if (!it.alwaysDark) { %><button class="icon-btn" type="button" data-theme-toggle aria-label="Switch between dark and light theme" title="Switch between dark and light theme"><%~ it.icon('circle-half') %></button><% } %>
+        <% if (it.user) { %>
+        <form method="post" action="/logout" class="nav-logout">
+          <button class="icon-btn wide" type="submit" title="Log out <%= it.user.name %>"><span class="avatar" aria-hidden="true"><%= it.user.name.slice(0, 1).toUpperCase() %></span><span class="sr-only">Log out <%= it.user.name %></span><%~ it.icon('sign-out') %></button>
+        </form>
+        <button class="icon-btn menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="menu" aria-label="Open the menu"><span class="bars" aria-hidden="true"><i></i><i></i></span></button>
+        <% } %>
+      </div>
+    </nav>
+  </header>
+
+  <% if (it.user) { %>
+  <div id="menu" class="menu" inert>
+    <nav aria-label="Menu">
+      <a href="/lobby" style="--i: 0" <%~ it.section === 'home' ? 'aria-current="page"' : '' %>><%~ it.icon('house') %>Home</a>
+      <a href="/analytics" style="--i: 1" <%~ it.section === 'analytics' ? 'aria-current="page"' : '' %>><%~ it.icon('chart-bar') %>Analytics</a>
+      <a href="/connect" style="--i: 2" <%~ it.section === 'connect' ? 'aria-current="page"' : '' %>><%~ it.icon('plug') %>Connect your agent</a>
+      <form method="post" action="/logout" style="--i: 3"><button type="submit"><%~ it.icon('sign-out') %>Log out <%= it.user.name %></button></form>
+    </nav>
+  </div>
+  <% } %>
+
+  <main id="main" tabindex="-1" class="<%= it.wide ? 'wide' : '' %>">
+    <%~ it.body %>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="brand small"><img src="/static/p41-icon.svg" alt="" width="16" height="16">Pair41</span>
+      <span class="caption-5 muted">Your coding agent, pairing with your teammate's.</span>
+      <a class="caption-4" href="#main">Back to top</a>
+    </div>
+  </footer>
+</body>
+</html>

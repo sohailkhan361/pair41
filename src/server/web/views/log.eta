@@ -1,0 +1,28 @@
+<% layout('./layout', { title: 'Log: ' + it.pair.feature, section: 'home' }) %>
+<nav class="crumbs caption-4" aria-label="Breadcrumb"><a href="/lobby"><%~ it.icon('arrow-left') %>Home</a><span aria-hidden="true">/</span><a href="/people/<%= encodeURIComponent(it.partner.name) %>"><%= it.partner.name %></a></nav>
+<header class="room-head">
+  <div>
+    <h1 class="heading-4"><%= it.pair.feature %></h1>
+    <p class="body-6 muted">With <%= it.partner.name %><% if (it.pair.project) { %>, in <code><%= it.pair.project %></code><% } %></p>
+  </div>
+  <div class="room-head-end">
+    <a class="btn secondary sm" href="/pairs/<%= it.pair.id %>/log.md"><%~ it.icon('download-simple') %>Download as markdown</a>
+    <nav class="tabs" aria-label="Pair views"><a href="/pairs/<%= it.pair.id %>">Room</a><a aria-current="page" href="/pairs/<%= it.pair.id %>/log">Conversation log</a></nav>
+  </div>
+</header>
+<%~ include('./room-status', { oob: false }) %>
+<div id="log-live" class="narrow">
+  <%~ include('./log-live', { partial: false }) %>
+</div>
+<script>
+  (function () {
+    var source = new EventSource('/events?pair=<%= it.pair.id %>');
+    var timer;
+    source.addEventListener('changed', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        htmx.ajax('GET', '/pairs/<%= it.pair.id %>/log/live', { target: '#log-live', swap: 'innerHTML' });
+      }, 200);
+    });
+  })();
+</script>

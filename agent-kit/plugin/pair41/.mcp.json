@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "pair": {
+      "type": "http",
+      "url": "${user_config.server}/mcp",
+      "headers": {
+        "Authorization": "Bearer ${user_config.token}",
+        "X-Pair-Agent": "claude-code"
+      }
+    }
+  }
+}

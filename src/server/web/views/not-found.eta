@@ -1,0 +1,9 @@
+<% layout('./layout', { title: 'Not found' }) %>
+<section class="not-found">
+  <p class="eyebrow">404</p>
+  <h1 class="heading-3 hero-text">This page drifted out of orbit</h1>
+  <p class="lead">It does not exist, or it belongs to a pair you are not part of.</p>
+  <div class="row center">
+    <a class="btn primary" href="<%= it.user ? '/lobby' : '/login' %>"><%~ it.icon('arrow-left') %><%= it.user ? 'Back to Home' : 'Back to Pair41' %></a>
+  </div>
+</section>

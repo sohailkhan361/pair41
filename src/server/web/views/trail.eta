@@ -1,0 +1,1 @@
+<% it.trail.forEach(function (t, i) { %><%= i ? ', ' : '' %><%= t.text %> <time datetime="<%= t.at %>"><%= t.at.slice(11, 19) %></time><%= t.after ?? '' %><% }) %>

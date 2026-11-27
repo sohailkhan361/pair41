@@ -1,0 +1,79 @@
+<% layout('./layout', { title: 'Home', section: 'home' }) %>
+<div class="home">
+  <div id="home-live" class="home-main" hx-get="/lobby" hx-trigger="every 6s [!document.activeElement || !document.activeElement.closest('form, [data-needs-toggle]')]" hx-select="#home-live" hx-swap="outerHTML">
+    <script type="application/json" id="home-sim"><%~ JSON.stringify(it.sim).replace(/</g, '\\u003c') %></script>
+    <% var mine = it.needs.filter(function (n) { return n.turn === 'you'; }); var live = it.current.filter(function (p) { return p.state === 'connected'; }).length; var online = it.teammates.filter(function (t) { return t.online; }).length; %>
+
+    <header class="page-head">
+      <p class="eyebrow">Home</p>
+      <h1 class="heading-4"><%= it.current.length ? (it.current.length === 1 ? 'Your pair' : 'Your pairs') : 'Pair with a teammate' %></h1>
+      <ul class="summary" aria-label="At a glance">
+        <li class="<%= mine.length ? 'tone-action' : 'tone-clear' %>"><%~ it.icon(mine.length ? 'bell-simple' : 'check-circle') %><strong><%= mine.length || 'Nothing' %></strong> <%= mine.length === 1 ? 'needs you' : 'need' + (mine.length ? '' : 's') + ' you' %></li>
+        <li class="<%= live ? 'tone-live' : '' %>"><%~ it.icon('lightning') %><strong><%= live %></strong> live <%= live === 1 ? 'pair' : 'pairs' %></li>
+        <li><%~ it.icon('users-three') %><strong><%= online %></strong> of <%= it.teammates.length %> teammates online</li>
+      </ul>
+    </header>
+
+    <% if (it.error) { %><p class="notice error" role="alert"><%~ it.icon('warning-circle') %><%= it.error %></p><% } %>
+
+    <% if (it.needs.length) { %>
+    <section class="card needs-card <%= mine.length ? 'tone-action' : '' %>" aria-labelledby="needs-title">
+      <h2 id="needs-title" class="heading-6"><%= mine.length ? 'Needs you' : 'Waiting' %></h2>
+      <%~ include('./needs-list', { needsItems: it.needs }) %>
+    </section>
+    <% } %>
+
+    <% if (it.current.length) { %>
+    <section aria-label="Your pairs" class="pair-cards">
+      <% it.current.forEach(function (p) { %><%~ include('./pair-line', { p: p }) %><% }) %>
+    </section>
+    <% } else { %>
+    <p class="lead">Pick someone below and agree on a feature. Each of you tells your own agent the pair code, and the two agents start working together.</p>
+    <% } %>
+
+    <% if (!it.hasAgent) { %>
+    <section class="card tone-action">
+      <h2 class="heading-6"><%~ it.icon('plug') %> Connect your agent once</h2>
+      <p class="body-6 muted">So your agents can join pairs. In Claude Code, run <code>/plugin</code> and install <strong>pair41</strong> from P41's plugin library; it asks for your token. Your token, Codex and any other agent that speaks MCP are on <a href="/connect">Connect your agent</a>.</p>
+    </section>
+    <% } %>
+
+    <section aria-labelledby="mates-title">
+      <div class="section-head">
+        <h2 id="mates-title" class="heading-6">Teammates</h2>
+        <span class="caption-5 muted" title="Online means seen on the Pair41 page in the last 2 minutes, or their agent active in the last 5 minutes."><%= online %> online</span>
+      </div>
+      <% if (!it.teammates.length) { %>
+      <div class="empty">
+        <%~ it.icon('users-three') %>
+        <p class="title-4">Nobody else is here yet</p>
+        <p class="caption-2 muted">Send a teammate this page. They sign up from the log in screen.</p>
+      </div>
+      <% } else { %>
+      <ul class="people">
+        <% it.teammates.forEach(function (t) { var tone = t.pair ? (t.pair.state === 'connected' ? 'live' : 'action') : ''; %>
+        <li>
+          <a href="/people/<%= encodeURIComponent(t.name) %>">
+            <span class="avatar <%= t.online ? 'on' : '' %>" aria-hidden="true"><%= t.name.slice(0, 1).toUpperCase() %></span>
+            <span class="person-text">
+              <span class="title-4"><%= t.name %></span>
+              <span class="caption-5 muted"><%= t.online ? (t.agentRunning ? 'Online, agent running' : 'Online') : t.seen === 'never' ? 'Not seen yet' : 'Last seen ' + t.seen %></span>
+            </span>
+            <% if (t.pair) { %><span class="badge tone-<%= tone %>"><%= t.pair.state === 'connected' ? 'Pairing now' : t.pair.state === 'agreed' ? 'Pair agreed' : 'Pair asked' %></span>
+            <% } else { %><span class="caption-5 muted go"><%= t.pairs ? t.pairs + (t.pairs === 1 ? ' pair' : ' pairs') + ' together' : 'Ask to pair' %><%~ it.icon('arrow-right') %></span><% } %>
+          </a>
+        </li>
+        <% }) %>
+      </ul>
+      <% } %>
+    </section>
+  </div>
+
+  <aside class="home-side" aria-label="Live view">
+    <figure class="stage chamber">
+      <canvas data-sim="people" data-source="home-sim" role="img" aria-label="You in the middle and your teammates around you. The Teammates list says the same."></canvas>
+      <%~ include('./stage-controls', {}) %>
+    </figure>
+    <p class="caption-5 muted stage-note">You in the middle. Teammates who are online orbit close, and a line means you have a pair open with them. Click someone to see your pairs together.</p>
+  </aside>
+</div>

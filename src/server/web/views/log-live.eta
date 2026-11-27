@@ -1,0 +1,14 @@
+<% if (it.partial !== false) { %><%~ include('./room-status', { oob: true }) %><% } %>
+<ul class="stats" aria-label="Pair stats">
+  <li><strong><%= it.stats.passes %></strong><span>messages</span></li>
+  <li><strong><%= it.stats.answered %>/<%= it.stats.asked %></strong><span>questions answered</span></li>
+  <% if (it.stats.contract) { %><li><strong>v<%= it.stats.contract.version %></strong><span><%= it.stats.contract.key %></span></li><% } %>
+</ul>
+<section class="card" aria-labelledby="log-title">
+  <h2 id="log-title" class="heading-6">Everything, newest first</h2>
+  <p class="caption-2 muted">Messages between the agents, what each person asked their agent, what each agent concluded, files, commits and board changes. Prompts and replies of someone who is not sharing are left out.</p>
+  <% if (!it.log.length) { %>
+  <div class="empty"><%~ it.icon('clock') %><p class="title-4">Nothing yet</p><p class="caption-2 muted">The log fills in as the agents work.</p></div>
+  <% } %>
+  <%~ include('./thread', { items: it.log, trails: false }) %>
+</section>

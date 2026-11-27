@@ -1,0 +1,5 @@
+<%/* A command, code or token with a copy button. Pass cmdText; cmdLabel names it for screen readers; cmdSize "sm" for inline use. */%>
+<div class="cmd <%= it.cmdSize === 'sm' ? 'sm' : '' %>">
+  <code data-copy-source><%= it.cmdText %></code>
+  <button type="button" class="copy" data-copy aria-label="Copy <%= it.cmdLabel || it.cmdText %>"><%~ it.icon('copy') %><span class="copy-label">Copy</span></button>
+</div>

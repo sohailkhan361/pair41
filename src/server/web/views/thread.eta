@@ -1,0 +1,64 @@
+<% var verb = { question: 'asked', answer: 'answered', chat: 'said' }; %>
+<% var feedVerb = { commit: 'committed', file: 'changed', activity: 'is now' }; %>
+<% var boardLine = /^(.+?) changed the board: (\w+) "(.+?)" is now version (\d+): (.*?)\.?( Call board_read to see it\.)?$/; %>
+<ol class="events">
+  <% it.items.forEach(function (item) { var m = item.message; %>
+  <% if (item.dayBefore) { %>
+  <li class="ev-day"><time datetime="<%= item.dayBefore %>" data-date><%= item.dayBefore.slice(0, 10) %></time></li>
+  <% } else if (item.gapBefore) { %>
+  <li class="ev-gap"><%= item.gapBefore %></li>
+  <% } %>
+
+  <% if (item.side === 'net') { var b = item.body.match(boardLine); %>
+  <li class="ev note" data-key="<%= item.key %>">
+    <time class="ev-time" datetime="<%= item.at %>"><%= item.at.slice(11, 19) %></time>
+    <div class="ev-main">
+      <% if (b) { %><strong><%= b[1] %></strong> updated the <%= b[2] %> <code><%= b[3] %></code> to v<%= b[4] %>: <%= b[5] %><% } else { %><%= item.body.replace(/ Call board_read to see it\.$/, '') %><% } %>
+    </div>
+  </li>
+
+  <% } else if (m) { %>
+  <li class="ev <%= item.side %> <%= m.pending ? 'pending' : '' %> kind-<%= m.kind %>" data-key="<%= item.key %>">
+    <time class="ev-time" datetime="<%= item.at %>"><%= item.at.slice(11, 19) %></time>
+    <div class="ev-main">
+      <div class="ev-head">
+        <span class="who"><i aria-hidden="true"></i><%= m.who %></span>
+        <span class="verb"><%= m.human ? 'wrote, on the Pair41 page' : verb[m.kind] || m.kind %></span>
+        <% if (m.answeredIn) { %><span class="badge tone-live">answered in <%= m.answeredIn %></span><% } %>
+        <% if (m.kind === 'question' && m.state === 'open') { %><span class="badge tone-wait">waiting for an answer</span><% } %>
+        <% if (m.kind === 'question' && m.state === 'closed') { %><span class="badge tone-wait"><%= m.reason || 'closed' %></span><% } %>
+        <% if (m.kind === 'question' && m.state === 'deferred') { %><span class="badge <%= m.fromMe ? 'tone-wait' : 'tone-action' %>">deferred<%= m.reason ? ': ' + m.reason : '' %></span><% } %>
+      </div>
+      <% if (m.replyToText) { %><div class="ev-quote" title="<%= m.replyTo %>"><%= m.replyToText %></div><% } %>
+      <p class="ev-text"><%= m.body %></p>
+      <% if (m.pending) { %>
+      <form method="post" action="/messages/<%= m.rawId %>/approve" class="approval">
+        <span class="badge tone-action"><%~ it.icon('shield-check') %>Waiting for your approval</span>
+        <button class="btn primary sm" name="decision" value="approve"><%~ it.icon('check') %>Approve and send</button>
+        <button class="btn ghost sm" name="decision" value="reject">Reject</button>
+      </form>
+      <% } %>
+      <% if (it.trails) { %><details class="delivery"><summary>Delivery</summary><%~ include('./trail', { trail: m.trail }) %></details><% } %>
+    </div>
+  </li>
+
+  <% } else if (item.type === 'prompt' || item.type === 'reply') { %>
+  <li class="ev <%= item.side %>" data-key="<%= item.key %>">
+    <time class="ev-time" datetime="<%= item.at %>"><%= item.at.slice(11, 19) %></time>
+    <div class="ev-main">
+      <div class="ev-head">
+        <span class="who"><i aria-hidden="true"></i><%= item.who %></span>
+        <span class="verb"><%= item.type === 'prompt' ? (item.who === 'You' ? 'asked your ' : 'asked their ') + item.agent : 'concluded' %></span>
+      </div>
+      <p class="ev-text muted"><%= item.body %></p>
+    </div>
+  </li>
+
+  <% } else { %>
+  <li class="ev note <%= item.side %>" data-key="<%= item.key %>">
+    <time class="ev-time" datetime="<%= item.at %>"><%= item.at.slice(11, 19) %></time>
+    <div class="ev-main"><strong><%= item.who %></strong> <%= feedVerb[item.type] || item.type %> <% if (item.type === 'file' || item.type === 'commit') { %><code><%= item.body %></code><% } else { %><%= item.body %><% } %></div>
+  </li>
+  <% } %>
+  <% }) %>
+</ol>

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: pair41
+description: Pair41 server on work-1 (EKS). Secrets come from Parameter Store through an ExternalSecret.
+type: application
+version: 0.1.0
+appVersion: '0.1.0'

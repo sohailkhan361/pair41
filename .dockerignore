@@ -1,0 +1,14 @@
+.git
+.github
+.claude
+node_modules
+data
+coverage
+docs
+tests
+scripts
+agent-kit
+deploy
+*.md
+*.db
+.env

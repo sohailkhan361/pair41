@@ -1,0 +1,48 @@
+<% var s = it.status; var yours = it.attention.filter(function (a) { return a.turn === 'you'; });
+var agentState = function (a) { return !a.attached ? 'Not joined' : a.running ? (a.working ? 'Working' : 'Idle') : 'Not running'; };
+var agentTone = function (a) { return !a.attached ? 'missing' : a.running ? (a.working ? 'working' : 'idle') : 'stopped'; }; %>
+<section id="room-status" class="status-strip tone-<%= s.tone %>" <%~ it.oob ? 'hx-swap-oob="true"' : '' %> aria-labelledby="status-title">
+  <div class="status-main">
+    <span class="badge tone-<%= it.pair.state === 'connected' ? 'live' : s.tone === 'action' ? 'wait' : s.tone %>"><i class="pulse" aria-hidden="true"></i><%= s.label %></span>
+    <h2 id="status-title" class="heading-5" aria-live="polite"><%= s.title %></h2>
+    <% if (s.detail && !yours.length) { %><p class="body-6 muted"><%= s.detail %></p><% } %>
+    <% if (yours.length) { %>
+    <div class="status-actions">
+      <%~ include('./needs-list', { needsItems: yours, needsHideHeads: true, needsHidePair: true }) %>
+    </div>
+    <% } %>
+  </div>
+  <div class="status-agents">
+    <% [['mine', 'You', it.me], ['theirs', it.partner.name, it.partner]].forEach(function (row) { var a = row[2]; %>
+    <div class="agent-card <%= row[0] %> state-<%= agentTone(a) %>">
+      <div class="agent-card-head">
+        <span class="orb" aria-hidden="true"></span>
+        <span class="title-4"><%= row[1] %></span>
+        <span class="badge state"><%= agentState(a) %></span>
+      </div>
+      <% if (a.attached) { %>
+      <p class="caption-5 muted"><%= a.agent %><%= a.model ? ' · ' + a.model : '' %> · heard from <%= a.seenAgo %> ago</p>
+      <% if (a.activity) { %><p class="caption-2 now"><%~ it.icon('lightning') %><%= a.activity %></p><% } %>
+      <% if (row[0] === 'mine' && it.pair.canJoin) { %>
+      <details class="disclose caption-5"><summary>Use another agent</summary>
+        <p class="muted">Tell it this. It replaces the one in the pair now.</p>
+        <%~ include('./cmd', { cmdText: 'join Pair41 pair ' + it.pair.code, cmdLabel: 'the join line', cmdSize: 'sm' }) %>
+      </details>
+      <% } %>
+      <% } else { %>
+      <p class="caption-5 muted"><%= row[0] === 'mine' ? (it.pair.canJoin ? 'Tell your agent the join line.' : it.pair.state === 'asked' ? 'Accept to join your agent.' : 'No agent joined.') : (it.pair.state === 'asked' ? (it.pair.iAsked ? 'Has not accepted yet.' : 'Asked you to pair.') : it.pair.state === 'ended' || it.pair.state === 'declined' ? 'No agent joined.' : 'Their agent has not joined yet.') %></p>
+      <% } %>
+      <% if (row[0] === 'theirs' && it.nudge && (it.nudge.allowed || it.nudge.waitMinutes)) { %>
+      <form method="post" action="/pairs/<%= it.pair.id %>/nudge" class="nudge-row">
+        <span class="caption-5 muted"><%= it.nudge.reason %>.</span>
+        <% if (it.nudge.allowed) { %>
+        <button class="btn secondary sm"><%~ it.icon('bell-simple') %>Nudge <%= it.partner.name %></button>
+        <% } else { %>
+        <span class="caption-5 muted">Nudged. You can nudge again in <%= it.nudge.waitMinutes %> min.</span>
+        <% } %>
+      </form>
+      <% } %>
+    </div>
+    <% }) %>
+  </div>
+</section>
