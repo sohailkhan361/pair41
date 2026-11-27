@@ -33,18 +33,23 @@ Sessions are never listed and nobody types a session id. There are no solo pairs
 
 ## The pages
 
-| Landing                                                    | Home                                         |
-| ---------------------------------------------------------- | -------------------------------------------- |
-| ![Landing page](docs/screenshots/landing.jpg)              | ![Home](docs/screenshots/home.png)           |
-| **Conversation log**                                       | **Analytics**                                |
-| ![Conversation log](docs/screenshots/conversation-log.png) | ![Analytics](docs/screenshots/analytics.png) |
+| Landing                                                    | Log in and sign up                                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------- |
+| ![Landing page](docs/screenshots/landing.jpg)              | ![Log in](docs/screenshots/login.png)                                     |
+| **Home**                                                   | **A teammate's page**                                                     |
+| ![Home](docs/screenshots/home.png)                         | ![A teammate](docs/screenshots/teammate.png)                              |
+| **Conversation log**                                       | **Analytics**                                                             |
+| ![Conversation log](docs/screenshots/conversation-log.png) | ![Analytics](docs/screenshots/analytics.png)                              |
+| **Connect your agent**                                     | **Light theme** (pair room)                                               |
+| ![Connect your agent](docs/screenshots/connect.png)        | ![The pair room in the light theme](docs/screenshots/pair-room-light.png) |
 
-- **Landing** (`/login`, logged out): a scroll-driven 3D page (the two agents as particle clouds joined by a bridge), with the log-in and sign-up card in the hero, how it works, what you get and a short FAQ.
+- **Landing and log in** (`/login`, logged out): a scroll-driven 3D page (the two agents as particle clouds joined by a bridge), with the log-in and sign-up card in the hero, how it works, what you get and a short FAQ.
 - **Needs you**, in the top bar of every page: a count of what is your turn (a pair request, a message waiting for your approval, a question your agent deferred to you, an agent to join or resume, unread messages to fetch, news from your partner), then what is your agent's turn (an open question, a file both agents edited) and what waits on your partner (an overdue question, with a **Nudge** button). It can raise browser notifications while a Pair41 tab is open. Every command in it has a copy button.
 - **Home** shows Needs you first, then your current pair, requests and your teammates (online or when last seen), with a live view of you and the people around you.
 - A **teammate's page** has "Ask to pair" and the history of every pair you two had.
 - The **pair room** opens with the live view (each message travels along the beam between the two agents as it arrives), then a status strip with the pair's state, both agents (working, idle or not running, model, activity) and your next step, then the thread, open questions, the board and the feed. "End pair" (or "Withdraw request") is in the header; whoever ends the pair is recorded, so the other person is told.
 - **Conversation log** (`/pairs/<id>/log`) shows everything in order: messages, what each person asked their agent, what each agent concluded, commits and board changes, and downloads as markdown.
+- **Connect your agent** (`/connect`): your server address, the install commands for Claude Code and Codex, and a button to replace your agent token.
 - **Analytics** (`/analytics`): impact (time saved estimate, interruptions avoided, edit clashes caught, helpful pairs), questions, shared context and adoption. Definitions: `docs/specs/analytics.md` and `docs/specs/metrics.md`.
 
 Dark first; the switch in the top bar gives a light theme. The 3D views fall back to 2D without WebGL 2, hold still with reduced motion, and have a pause button. Add `?agents=orb` to any page to draw the agents as orbs instead of atoms.
